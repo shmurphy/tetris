@@ -1,0 +1,38 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package gui;
+
+import javax.swing.JFrame;
+
+/**
+ * 
+ * @author Shannon Murphy
+ * @version 3 March 2015
+ */
+@SuppressWarnings("serial")
+public class TetrisGUI {
+    
+    /** The frame for the GUI. */
+    private final JFrame myFrame;
+    
+    // Constructor
+
+    /**
+     * Constructs a new IntGUI.
+     */
+    public TetrisGUI() {
+        myFrame = new JFrame("305");
+        myFrame.add(new GamePanel());
+    }
+    
+    /** Displays the GUI. */
+    public void start() {
+        myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        myFrame.setSize(600, 600);
+        myFrame.pack();
+        myFrame.setResizable(false);
+        myFrame.setVisible(true);
+    }
+}

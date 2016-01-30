@@ -1,0 +1,213 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package gui;
+
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import model.Board;
+import model.Point;
+import model.TetrisPiece;
+
+/**
+ * Panel where the game is played.
+ * 
+ * @author Shannon Murphy
+ * @version 3 March 2015
+ */
+@SuppressWarnings("serial")
+public class GamePanel extends JPanel implements Observer {
+
+    /** Default size for the game panel. */
+    private static final Dimension GAME_PANEL_SIZE = new Dimension(401, 410);
+    
+    /** Default size for the east panel. */
+    private static final Dimension EAST_PANEL_SIZE = new Dimension(210, 420);
+    
+    /** The default space between components. */
+    private static final int PADDING = 150;
+    
+    /** The size for the blocks of the tetris pieces. */
+    private static final int BLOCK_SIZE = 20;
+
+    /** The location for the "Game Over" text to be displayed. */    
+    private static final Point GAME_OVER_LOCATION = new Point(75, 50);
+    
+    // instance fields
+    
+    /** The Board for the game. */
+    private final Board myBoard;
+    
+    /** A list of the Board data. */
+    private List<Color[]> myBoardData;
+    
+    /** X-value for drawing the Tetris blocks. */
+    private int myX;
+    
+    /** The Panel for the next piece preview. */
+    private final PreviewPanel myPreviewPanel;
+    
+    /** A flag to change the Panel when the game is over. */
+    private boolean myGameOver;
+    
+    /** The timer that controls the animation. */
+    private final Timer myTimer;
+    
+    /** A flag to restart the game. */
+    private boolean myRestart;
+    
+    /**
+     * Constructs a new panel for the game.
+     * 
+     * @param theBoard the Board used for the game. 
+     * @param theTimer the Timer that controls the game.
+     */
+    public GamePanel(final Board theBoard, final Timer theTimer) {
+        super(new BorderLayout());
+        myPreviewPanel = new PreviewPanel();
+        myTimer = theTimer;
+        myBoard = theBoard;
+        setUpGame();
+        myX = 0;
+        myGameOver = false;
+        myRestart = false;
+    }
+    
+    /** Helper method for the constructor to set up the panel. */
+    private void setUpGame() {
+        setPreferredSize(GAME_PANEL_SIZE);
+        setBackground(Color.WHITE);
+        setUpBoard();
+        setUpEast();
+    }
+    
+    /** Sets up the East Panel. */
+    private void setUpEast() {
+        final JPanel eastPanel = new JPanel();
+        eastPanel.setBackground(Color.WHITE);
+        eastPanel.setPreferredSize(EAST_PANEL_SIZE);
+        eastPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        myPreviewPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        final Box eastBox = new Box(BoxLayout.LINE_AXIS);
+        
+        eastBox.add(Box.createVerticalStrut(PADDING));
+        eastBox.add(myPreviewPanel);
+        eastPanel.add(eastBox);
+        add(eastPanel, BorderLayout.EAST);
+    }
+    
+    /** Sets up the Board for the game. */
+    private void setUpBoard() {
+        myBoard.addObserver(this);
+        myBoardData = new ArrayList<Color[]>();
+        myBoard.clear();
+    }
+    
+    /** 
+     * Draws Tetris pieces on the panel.
+     * Draws a game over screen if the game is over.
+     * Also paints a new screen if the game is restarted.
+     */
+    /** {@inheritDoc} */
+    @Override
+    public void paintComponent(final Graphics theGraphics) {
+        super.paintComponent(theGraphics);
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+        for (int i = myBoardData.size() - 1; i >= 0; i--) {
+            final Color[] row = myBoardData.get(i);
+            int index = 0;
+            for (final Color c : row) {
+                if (c != null) {
+                    myX = index;
+                    g2d.setColor(Color.BLACK);
+                    final Rectangle2D.Double rect = new Rectangle2D.Double(myX * BLOCK_SIZE, 
+                                                    (BLOCK_SIZE - i) * BLOCK_SIZE, 
+                                                     BLOCK_SIZE, BLOCK_SIZE);
+                    g2d.setStroke(new BasicStroke(2));
+                    g2d.draw(rect);
+                    g2d.setColor(c);
+                    g2d.fill(rect);
+                }
+                index++;
+            }
+        }
+        if (myGameOver) {
+            drawGameOver(g2d);
+        }
+        if (myRestart) {
+            drawRestart(g2d);
+        }
+    }
+    
+    /** 
+     * Draws the "Game Over" screen. 
+     * 
+     * @param theG2d the Graphics2D to draw with.
+     */
+    private void drawGameOver(final Graphics2D theG2d) {
+        myTimer.stop();
+        theG2d.setColor(Color.BLACK);
+        theG2d.fill(new Rectangle2D.Double(0, 0, (int) GAME_PANEL_SIZE.getWidth() + 1,
+                                        (int) GAME_PANEL_SIZE.getHeight() + BLOCK_SIZE));
+        theG2d.setColor(Color.WHITE);                            
+        theG2d.drawString("Game over!", GAME_OVER_LOCATION.x(), GAME_OVER_LOCATION.y());
+        myGameOver = false;
+    }
+    
+    /** 
+     * Draws a new screen to restart the game. 
+     * 
+     * @param theG2d the Graphics2D to draw with.
+     */
+    private void drawRestart(final Graphics2D theG2d) {
+        theG2d.fill(new Rectangle2D.Double(0, 0, (int) GAME_PANEL_SIZE.getWidth(),
+                                        (int) GAME_PANEL_SIZE.getHeight() + BLOCK_SIZE));
+        myRestart = false;
+        myTimer.restart();
+    }
+    
+    /**
+     * Used to set a flag to draw a blank screen. 
+     * 
+     * @param theStatus true if the game was restarted, false otherwise.
+     */
+    public void setRestart(final boolean theStatus) {
+        myRestart = theStatus;
+    }
+    
+    /** Receives updates from the Board. */
+    /** {@inheritDoc} */
+    @Override
+    public void update(final Observable theObservable, final Object theArg) {
+        if (theObservable instanceof Board) {
+            if (theArg.getClass().equals(Board.BoardData.class)) {
+                myBoardData = ((Board.BoardData) theArg).getBoardData();
+            } else if (theArg.getClass().equals(TetrisPiece.class)) {
+                final TetrisPiece nextPiece = (TetrisPiece) theArg;
+                myPreviewPanel.setNextPiecePoints(nextPiece);
+                myPreviewPanel.setColor(nextPiece.getColor());
+
+            } else if (theArg.getClass().equals(Board.GameStatus.class)) {
+                myGameOver = true;
+            }
+            repaint();
+        }
+    } 
+}

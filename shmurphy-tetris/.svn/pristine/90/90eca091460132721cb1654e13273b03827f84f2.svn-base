@@ -1,0 +1,518 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+
+package gui;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
+import javax.swing.Timer;
+
+import model.Board;
+import sound.SoundPlayer;
+
+/** 
+ * A fully loaded menu bar for Tetris. 
+ * 
+ * @author Shannon Murphy
+ * @version 12 March 2015
+ */
+@SuppressWarnings("serial")
+public class TetrisMenuBar extends JMenuBar implements PropertyChangeListener {
+    
+    /** The file name for the Meow Mix theme song. */
+    private static final String MEOW_MIX = "./sounds//meowmix.wav";
+    
+    /** The file name for the classic Tetris theme song. */
+    private static final String CLASSIC_THEME = "./sounds//Tetris.wav";
+    
+    /** The file name for the new game sound effect. */
+    private static final String NEW_GAME = "./sounds//newgame.wav";
+    
+    // instance fields
+
+    /** The Timer that controls the game. */
+    private final Timer myTimer;
+    
+    /** The board for the game. */
+    private final Board myBoard;
+    
+    /** The Frame this GUI is on. */
+    private final JFrame myFrame;
+    
+    /** The panel where the game is played. */
+    private final GamePanel myGamePanel;
+    
+    /** The SoundPlayer to play sound effects. */
+    private final SoundPlayer myPlayer;
+    
+    /** Whether the sound effects are muted or not. */
+    private boolean myEffectsMuted;
+    
+    /** Whether the background music is muted. */
+    private boolean myMusicMuted;
+    
+    /** The status of the game's Cat Mode feature.*/
+    private boolean myCatModeStatus;
+    
+    /** Keeps track of when the game is running. */
+    private boolean myGameStatus;
+    
+    /** The menu item to start a new game. */
+    private JMenu myNewGame;
+    
+    /** Menu item to pause the game. */
+    private JCheckBoxMenuItem myPause;
+    
+    /** Menu item to end the game. */
+    private JMenuItem myEndGame;
+    
+    /** 
+     * Creates a new TetrisMenuBar.
+     * 
+     * @param theFrame the frame the menu bar is on.
+     * @param theTimer the timer controlling the game.
+     * @param theBoard the game board in use.
+     * @param thePanel the game panel in use.
+     */
+    public TetrisMenuBar(final JFrame theFrame, final Timer theTimer, 
+                         final Board theBoard, final GamePanel thePanel) {
+        super();
+        myGamePanel = thePanel;
+        myFrame = theFrame;
+        myTimer = theTimer;
+        myBoard = theBoard;
+        setUpBooleans();
+        myPlayer = new SoundPlayer();
+        setUpMenuBar();
+    }
+    
+    /** 
+     * Helper method for the constructor to set up the various boolean fields,
+     * all of which are used to track game states throughout the program. 
+     */
+    private void setUpBooleans() {
+        myEffectsMuted = false;
+        myMusicMuted = false;
+        myCatModeStatus = false;
+        myGameStatus = false;
+        myGamePanel.drawNewScreen(true);
+    }
+    
+    /** Helper method for the constructor to set up the components of the menu bar. */
+    private void setUpMenuBar() {
+        myNewGame = new JMenu("New Game");
+        myPause = new JCheckBoxMenuItem("Pause");
+        myEndGame = new JMenuItem("End Game", KeyEvent.VK_E);
+        myNewGame.setEnabled(true);
+        final JMenu fileMenu = createFileMenu();
+        final JMenu helpMenu = createHelpMenu();
+        final JMenu optionMenu = createOptionMenu();
+        add(fileMenu);
+        add(optionMenu);
+        add(helpMenu);
+        add(createAboutMenuItem());
+    }
+    
+    /** Creates the File menu for the GUI's MenuBar. 
+     * 
+     * @return a File menu with a new game feature.
+     */
+    private JMenu createFileMenu() {
+        final JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        myEndGame.setEnabled(false);
+        myPause.setEnabled(false);
+        
+        myNewGame.setMnemonic(KeyEvent.VK_N);
+        myNewGame.add(createRegularGameMode());
+        myNewGame.add(createCatGameMode());
+        
+        setUpEndGame();
+        setUpPause();
+        
+        fileMenu.add(myNewGame);
+        fileMenu.add(myEndGame);
+        fileMenu.add(myPause);
+        fileMenu.addSeparator();
+        fileMenu.add(createQuit());
+        return fileMenu;
+    }
+    
+    /** 
+     * Creates the Option menu for the GUI's MenuBar.
+     * Contains options for customizing the game.
+     * 
+     * @return a new Option menu.
+     */
+    private JMenu createOptionMenu() {
+        final JMenu optionMenu = new JMenu("Options");
+        optionMenu.setMnemonic(KeyEvent.VK_O);
+        final JMenu sounds = new JMenu("Sounds");
+        sounds.setMnemonic(KeyEvent.VK_S);
+        
+        final JCheckBoxMenuItem muteEffects = new JCheckBoxMenuItem("Mute Sound Effects");
+        muteEffects.setMnemonic(KeyEvent.VK_E);
+        muteEffects.addActionListener(new ActionListener() {
+            /** Mutes/unmutes the sound effects. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                checkSoundEffectsMute(muteEffects);
+            }
+        });
+        
+        final JCheckBoxMenuItem muteMusic = new JCheckBoxMenuItem("Mute Background Music");
+        muteMusic.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, ActionEvent.CTRL_MASK));
+        muteMusic.setMnemonic(KeyEvent.VK_M);
+        muteMusic.addActionListener(new ActionListener() {
+            /** Mutes/unmutes the background music. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                checkMusicMute(muteMusic);
+            }
+        });
+        
+        final JCheckBoxMenuItem grid = new JCheckBoxMenuItem("Grid");
+        grid.addActionListener(new ActionListener() {
+            /** Notifies the game panel to draw a grid. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                if (grid.isSelected()) {
+                    myGamePanel.setGrid(true);
+                } else {
+                    myGamePanel.setGrid(false);
+                }
+            }
+        });
+        
+        sounds.add(muteMusic);
+        sounds.add(muteEffects);
+        optionMenu.add(sounds);
+        optionMenu.add(grid);
+        return optionMenu;
+    }
+    
+    /** 
+     * Creates the Help menu for the GUI's MenuBar.
+     * Contains a "How to Play" menu item that displays the controls of the game.
+     * 
+     * @return a new Help menu.
+     */
+    private JMenu createHelpMenu() {
+        final JMenu helpMenu = new JMenu("Help");
+        helpMenu.setMnemonic(KeyEvent.VK_H);
+        helpMenu.add(createHelpMenuItems("Game Controls..."));
+        helpMenu.add(createHelpMenuItems("Scoring..."));
+        return helpMenu;
+    }
+    
+    /** 
+     * Creates an About menu item to display information about the game. 
+     * Contains source information about images and sounds.
+     * 
+     * @return a new JMenuItem for About.
+     */
+    private JMenuItem createAboutMenuItem() {
+        final JMenuItem about = new JMenuItem("About...", KeyEvent.VK_A);
+        about.addActionListener(new ActionListener() {
+            /** Display a JOptionPane with game info. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                myTimer.stop();
+                JOptionPane.showMessageDialog(myFrame,
+                          "TCSS 305 - Winter 2015\n" 
+                           + "Media sources: \n" 
+                           + "Cat background: http://www.firsthd"
+                           + "wallpapers.com/uploads/2013/07/cat_wallpaper20_800x600.jpg"
+                           + "\nSound effects: wavsource.com/n"
+                           + "Meow Mix: http://soundbible.com/1578-Meow-Mix-Commercial.html\n"
+                           + "Tetris Theme: https://archive.org/details/TetrisThemeMusic",
+                           "About",
+                          JOptionPane.PLAIN_MESSAGE);
+                if (myGameStatus) {
+                    myTimer.start();
+                }
+            }
+        });
+        return about;
+    }
+    
+    /**
+     * Creates the regular game mode menu item. 
+     * 
+     * @return a new JMenuItem for regular mode.
+     */
+    private JMenuItem createRegularGameMode() {
+        final JMenuItem regMode = new JMenuItem("Regular Mode");
+        regMode.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
+        regMode.addActionListener(new ActionListener() {
+            /** Starts a new game in regular mode. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                myGamePanel.drawNewScreen(false);
+                myGameStatus = true;
+                myPlayer.stop(CLASSIC_THEME);
+                if (myCatModeStatus) {
+                    myPlayer.stop(MEOW_MIX);
+                }
+                if (!myEffectsMuted) {
+                    myPlayer.play(NEW_GAME);
+                }
+                if (!myMusicMuted) {
+                    myPlayer.loop(CLASSIC_THEME);
+                }
+                setUpNewGame();
+                myCatModeStatus = false;
+                myGamePanel.setCatMode(false);
+            }
+        });
+        return regMode;
+    }
+    
+    /**
+     * Creates a new menu item for the cat mode.
+     * 
+     * @return a new JMenuItem for cat mode.
+     */
+    private JMenuItem createCatGameMode() {
+        final JMenuItem catMode = new JMenuItem("Cat Mode");
+        catMode.addActionListener(new ActionListener() {
+            /** Starts a new game in cat mode. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                myGamePanel.drawNewScreen(false);
+                myGameStatus = true;
+                myPlayer.stop(MEOW_MIX);
+                if (!myCatModeStatus) {
+                    myPlayer.stop(CLASSIC_THEME);
+                }
+                if (!myEffectsMuted) {
+                    myPlayer.play(NEW_GAME);
+                }
+                if (!myMusicMuted) {
+                    myPlayer.loop(MEOW_MIX);
+                } 
+                setUpNewGame();
+                myCatModeStatus = true;
+                myGamePanel.setCatMode(true);
+            }
+        });
+        return catMode;
+    }
+    
+    /** Sets up the features of the end game menu item to end the current game. */
+    private void setUpEndGame() {
+        myEndGame.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.CTRL_MASK));
+        myEndGame.addActionListener(new ActionListener() {
+            /** Ends the current game. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                myGameStatus = false;
+                if (myCatModeStatus) {
+                    myPlayer.stop(MEOW_MIX);
+                } else {
+                    myPlayer.stop(CLASSIC_THEME);
+                }
+                if (!myEffectsMuted) {
+                    myPlayer.play("./sounds//aww.wav");
+                }
+                myTimer.stop();
+                myNewGame.setEnabled(true);
+                myPause.setEnabled(false);
+                myEndGame.setEnabled(false);
+            }
+        });
+    }
+    
+    /** Sets up the pause menu item to pause/unpause the game. */
+    private void setUpPause() {
+        myPause.setMnemonic(KeyEvent.VK_P);
+        myPause.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, ActionEvent.CTRL_MASK));
+        myPause.addActionListener(new ActionListener() {
+            /** Pauses/unpauses the game. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                if (myPause.isSelected()) {
+                    if (myCatModeStatus) {
+                        myPlayer.pause(MEOW_MIX);
+                    } else {
+                        myPlayer.pause(CLASSIC_THEME);
+                    }
+                    myTimer.stop();
+                } else {
+                    if (myCatModeStatus) {
+                        myPlayer.play(MEOW_MIX);
+                    } else {
+                        myPlayer.play(CLASSIC_THEME);
+                    }
+                    myTimer.start();
+                }
+            }
+        });
+    }
+    
+    /** 
+     * Creates a menu item for quit, to close the window.
+     * 
+     * @return a new JMenuItem for quit.
+     */
+    private JMenuItem createQuit() {
+        final JMenuItem quit = new JMenuItem("Quit");
+        quit.setMnemonic(KeyEvent.VK_Q);
+        quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, ActionEvent.CTRL_MASK));
+        quit.addActionListener(new ActionListener() {
+            /** Quits the program. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                myFrame.dispatchEvent(new WindowEvent(myFrame, WindowEvent.WINDOW_CLOSING));
+            }
+        });
+        return quit;
+    }
+    
+    /** 
+     * Sets up the state of various parts of the game to be ready for a new game. 
+     */
+    private void setUpNewGame() {
+        myBoard.clear();
+        myGamePanel.setRestart(true);
+        myNewGame.setEnabled(false);
+        myPause.setEnabled(true);
+        myPause.setSelected(false);
+        myTimer.setDelay(myTimer.getInitialDelay());
+        myEndGame.setEnabled(true);
+    }
+    
+    /**
+     * Shows a message dialog for each menu item in the help menu.
+     * 
+     * @param theName the name of the menu item to be created.
+     * @return a new JMenuItem that will open a message dialog.
+     */
+    private JMenuItem createHelpMenuItems(final String theName) {
+        final JMenuItem item = new JMenuItem(theName);
+        item.addActionListener(new ActionListener() {
+            /** Shows a JOPtionPane with the specified message. */
+            public void actionPerformed(final ActionEvent theEvent) {
+                myTimer.stop();
+                JOptionPane.showMessageDialog(myFrame,
+                                              createMessageDialog(theName + "s"),
+                                              item.getText(),
+                                              JOptionPane.PLAIN_MESSAGE);
+                if (myGameStatus) {
+                    myTimer.start();
+                }
+            }
+        });
+        if (theName.charAt(0) == 'S') {
+            item.setMnemonic(KeyEvent.VK_S);
+        } else {
+            item.setMnemonic(KeyEvent.VK_C);
+        }
+        return item;
+    }
+    
+    /** 
+     * Checks whether the music is muted and responds appropriately.
+     * If the background music isn't muted, the sound player will play a theme song
+     * depending on which game mode is selected.
+     * If the background music is muted, the sound player will pause the current theme song.
+     * 
+     * @param theMuteItem the menu item for muting background music.
+     */
+    private void checkMusicMute(final JCheckBoxMenuItem theMuteItem) {
+        if (theMuteItem.isSelected()) {
+            myMusicMuted = true;
+            if (myCatModeStatus) {
+                myPlayer.pause(MEOW_MIX);
+            } else {
+                myPlayer.pause(CLASSIC_THEME);
+            }
+        } else if (!theMuteItem.isSelected()) {
+            myMusicMuted = false;
+            if (myGameStatus) {
+                if (myCatModeStatus) {
+                    myPlayer.play(MEOW_MIX);
+                } else {
+                    myPlayer.play(CLASSIC_THEME);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Checks whether the sound effects are muted and responds appropriately.
+     * If the sound effects are muted, this method notifies the game panel so it
+     * can mute its sound effects as well.
+     * 
+     * @param theMuteItem the menu item for muting sound effects.
+     */
+    private void checkSoundEffectsMute(final JCheckBoxMenuItem theMuteItem) {
+        if (theMuteItem.isSelected()) {
+            myEffectsMuted = true;
+        } else if (!theMuteItem.isSelected()) {
+            myEffectsMuted = false;
+        }
+        myGamePanel.setMute(myEffectsMuted);
+    }
+    
+    /**
+     * Returns either a String of game controls or a String of the scoring algorithm.
+     * To be displayed in the "Help" menu.
+     * 
+     * @param theName the name of the message dialog needed.
+     * @return a description for the message dialog.
+     */
+    private String createMessageDialog(final String theName) {
+        String result = "";
+        if ("Game Controls...s".equals(theName)) {
+            result = "Move left: Left Arrow\n"
+                + "Move right: Right Arrow\n"
+                + "Move down: Down Arrow\n"
+                + "Hard drop: Space Bar\n"
+                + "Rotate clockwise: Up Arrow or Z\n"
+                + "Rotate counterclockwise: X\n";
+        } else if ("Scoring...s".equals(theName)) {
+            result = "With n = the current level, the score is calculated as follows:\n" 
+                        + "If 1 line is cleared: n * 40.\n" 
+                        + "If 2 lines are cleared: n * 100.\n"
+                        + "If 3 lines are cleared: n * 300.\n"
+                        + "If 4 lines are cleared: n * 1200.\n\n"
+                        + "Also, n * 5 additional points are awarded for every piece landed.";
+        }
+        return result;
+    }
+    
+    /** 
+     * Returns whether or not the sound effects are muted. 
+     * 
+     * @return true if they are muted, false otherwise.
+     */
+    public boolean isMuted() {
+        return myEffectsMuted;
+    }
+    
+    /** 
+     * Returns whether or not the game is in "Cat Mode".
+     * 
+     * @return true if the game is in cat mode, false otherwise.
+     */
+    public boolean isInCatMode() {
+        return myCatModeStatus;
+    }
+    
+    @Override
+    /** Listens for when the current game is over. */
+    public void propertyChange(final PropertyChangeEvent theEvent) {
+        if ("game over".equals(theEvent.getPropertyName())) {
+            myNewGame.setEnabled(true);
+            myEndGame.setEnabled(false);
+            myPause.setEnabled(false);
+        } 
+    }
+}
+

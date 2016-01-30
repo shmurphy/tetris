@@ -1,0 +1,53 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package gui;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+
+import javax.swing.JFrame;
+
+/**
+ * 
+ * @author Shannon Murphy
+ * @version 3 March 2015
+ */
+@SuppressWarnings("serial")
+public class TetrisGUI {
+    
+    /** A ToolKit. */
+    private static final Toolkit KIT = Toolkit.getDefaultToolkit();
+    
+    /** The Dimension of the screen. */
+    private static final Dimension SCREEN_SIZE = KIT.getScreenSize();
+    
+    /** The frame for the GUI. */
+    private final JFrame myFrame;
+    
+    /** The Panel for the Next piece preview. */
+    private PreviewPanel myPreviewPanel;
+    
+    // Constructor
+
+    /**
+     * Constructs a new IntGUI.
+     */
+    public TetrisGUI() {
+        myFrame = new JFrame("305");
+        myFrame.add(new GamePanel(), BorderLayout.WEST);
+    }
+    
+    /** Displays the GUI. */
+    public void start() {
+        myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        myFrame.setSize(400, 250);
+        myFrame.setLocation(SCREEN_SIZE.width / 2 - myFrame.getWidth() / 2,
+                            SCREEN_SIZE.height / 2 - myFrame.getHeight() / 2);
+        //myFrame.pack();
+        myFrame.setResizable(false);
+        myFrame.setVisible(true);
+    }
+}

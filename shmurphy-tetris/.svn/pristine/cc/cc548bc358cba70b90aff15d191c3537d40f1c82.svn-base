@@ -1,0 +1,123 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package gui;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.border.TitledBorder;
+
+import model.Point;
+import model.TetrisPiece;
+
+
+/**
+ * Panel where the next piece preview is displayed.
+ * 
+ * @author Shannon Murphy
+ * @version 3 March 2015
+ */            
+@SuppressWarnings("serial")
+public class PreviewPanel extends JPanel {
+    
+    /** Default font to be used throughout the program. */
+    private static final Font DEFAULT_FONT = new Font("Georgia", Font.BOLD, 20);
+    
+    /** Default size for this panel. */
+    private static final Dimension PREVIEW_SIZE = new Dimension(110, 100);
+    
+    /** Default size for blocks. */
+    private static final int BLOCK_SIZE = 20;
+    
+    /** Used for spacing in the next piece preview Panel. */
+    private static final int PREVIEW_PADDING = 4;
+    
+    /** The next piece's points. */
+    private Point[] myPoints;
+    
+    /** The color used to display the piece. */
+    private Color myColor;
+    
+    /** Used as a flag to determine whether the game has started. */
+    private boolean myGameStatus;
+    
+    /**
+     * Constructs a new Preview Panel to show the next piece.
+     */
+    public PreviewPanel() {
+        super();
+        setPreferredSize(PREVIEW_SIZE);
+        myGameStatus = false;
+        setBackground(Color.WHITE);
+        createBorder();
+    }
+    
+    /** Creates the border for this panel. */
+    private void createBorder() {
+        TitledBorder title;
+        title = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(myColor, 2),
+                                                 "Next Piece:");
+        title.setTitleJustification(TitledBorder.CENTER);
+        title.setTitleFont(DEFAULT_FONT);
+        setBorder(title);
+    }
+    
+    /** 
+     * Sets the Points to draw the next piece preview with.
+     * 
+     * @param thePiece the next piece. 
+     */
+    public void setNextPiecePoints(final TetrisPiece thePiece) {
+        myPoints = thePiece.getPoints();
+    }
+    
+    /** 
+     * Sets the color for the next piece. 
+     * 
+     * @param theColor the Color for the specific tetris piece.
+     */
+    public void setColor(final Color theColor) {
+        myColor = theColor;
+    }
+    
+    /** 
+     * Sets the game status to determine whether the preview is shown yet. 
+     * 
+     * @param theStatus true if the game has started, false otherwise.
+     */
+    public void setGameStatus(final boolean theStatus) {
+        myGameStatus = theStatus;
+    }
+    
+    @Override
+    /** Draws Shapes on the panel. */
+    /** {@inheritDoc} */
+    public void paintComponent(final Graphics theGraphics) {
+        super.paintComponent(theGraphics);
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+        if (myGameStatus) {
+            for (int i = 0; i < myPoints.length; i++) {
+                g2d.setStroke(new BasicStroke(2));
+                final Rectangle2D.Double rect = new Rectangle2D.Double(
+                                            ((PREVIEW_PADDING - 1) 
+                                            + myPoints[i].x()) * BLOCK_SIZE, 
+                                            (PREVIEW_PADDING - myPoints[i].y()) * BLOCK_SIZE, 
+                                            BLOCK_SIZE, BLOCK_SIZE);
+                g2d.draw(rect);
+                g2d.setColor(myColor);
+                createBorder();
+                g2d.fill(rect);
+                g2d.setColor(Color.BLACK);
+            }
+        }
+    }
+}

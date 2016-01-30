@@ -1,0 +1,166 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package gui;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import model.Board;
+import model.Board.BoardData;
+import model.MovableTetrisPiece;
+import model.Point;
+import model.Rotation;
+import model.TetrisPiece;
+
+/**
+ * Panel where the game is played.
+ * 
+ * @author Shannon Murphy
+ * @version 3 March 2015
+ */
+@SuppressWarnings("serial")
+public class GamePanel extends JPanel implements Observer {
+
+    /** The default width for the game board. */
+    private static final int BOARD_WIDTH = 10;
+    
+    /** The default height for the game board. */
+    private static final int BOARD_HEIGHT = 20;
+    
+    /** The delay for the Timer. */
+    private static final int TIMER_DELAY = 300;
+    
+    /** The Board for the game. */
+    private final Board myBoard;
+    
+    /** The timer used for animation. */
+    private final Timer myTimer;
+    
+//    /** A list of Tetris pieces. */
+//    private final List<TetrisPiece> myPieces;
+    
+    /** A list of the Board data. */
+    private List<Color[]> myBoardData;
+    
+    /** The current Color. */
+    private Color myColor;
+    
+    /** A list of Points to use for blocks. */
+    private Point[] myPoints;
+    
+    /** TODO. */
+    private TetrisPiece myPiece;
+    
+    /**
+     * 
+     */
+    public GamePanel() {
+        super();
+        myTimer = new Timer(TIMER_DELAY, null);
+        myBoard = new Board(BOARD_WIDTH, BOARD_HEIGHT);
+//        myBoard = new Board(4, 8);
+        setPreferredSize(new Dimension(10, 20));
+        setBackground(Color.PINK);
+        myBoard.addObserver(this);
+        myBoardData = new ArrayList<Color[]>();
+        myBoard.clear();
+//        myPieces = new ArrayList<TetrisPiece>();
+//        myPieces.add(TetrisPiece.I);
+//        myBoard.setPieceSequence(myPieces);
+        createTimer();
+    }
+    
+    /** Creates the Timer. */
+    private void createTimer() {
+        myTimer.start();
+        myTimer.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent theEvent) {
+
+                myBoard.step();
+//                System.out.println(myPiece);
+            }
+        });
+    }
+    
+    @Override
+    /** Draws Shapes on the panel. */
+    public void paintComponent(final Graphics theGraphics) {
+        int x = 0;
+        Rectangle2D.Double rect;
+        super.paintComponent(theGraphics);
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+        for (int i = myBoardData.size() - 1; i >= 0; i--) {
+            final Color[] row = myBoardData.get(i);
+            for (final Color c : row) {
+                if (c == null) {
+                    x++;
+                } else {
+                    // draw rectangle using an x??, and 20 - i for y. width 10 height 10
+                }
+            }
+        }
+    }
+    
+    /**
+     * Draws the pieces on the panel.
+     * @param theG2D the graphics.
+     */
+    public void drawPieces(final Graphics2D theG2D) {
+        if (myPoints[0] != null) {
+
+        }             
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void update(final Observable theObservable, final Object theArg) {
+        if (theObservable instanceof Board) {
+            if (theArg.getClass().equals(Board.BoardData.class)) {
+                myBoardData = ((Board.BoardData) theArg).getBoardData();
+                repaint();
+            }
+        }
+
+    }
+    
+    /**
+     * TODO. 
+     * @param theColor .
+     * 
+     */
+    private void getNewPiece(final Color theColor) {
+        if (theColor.equals(Color.CYAN)) {
+            myPiece = TetrisPiece.I;
+        } else if (theColor.equals(Color.BLUE)) {
+            myPiece = TetrisPiece.J;
+        } else if (theColor.equals(new Color(233, 164, 0))) {
+            myPiece = TetrisPiece.L;
+        } else if (theColor.equals(Color.YELLOW)) {
+            myPiece = TetrisPiece.O;
+        } else if (theColor.equals(Color.GREEN)) {
+            myPiece = TetrisPiece.S;
+        } else if (theColor.equals(new Color(185, 33, 255))) {
+            myPiece = TetrisPiece.T;
+        } else if (theColor.equals(Color.RED)) {
+            myPiece = TetrisPiece.Z;
+        } 
+        myPoints = myPiece.getPoints();
+//        return myPiece;
+    }
+}

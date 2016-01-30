@@ -1,0 +1,63 @@
+package gui;
+
+/*
+ * TCSS 305
+ * An example to demonstrate the use of the observer pattern.
+ */
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.NumberFormat;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import model.Board;
+
+/**
+ * 
+ * @author Alan Fowler
+ * @version 1.2
+ */
+@SuppressWarnings("serial")
+public class TetrisGUI {
+    
+//    Board myBoard;
+    
+    Timer myTimer;
+    
+    GamePanel myPanel;
+    
+    JFrame myFrame;
+    
+    // Constructor
+
+    /**
+     * Constructs a new IntGUI.
+     */
+    public TetrisGUI() {
+        myFrame = new JFrame("305");
+//        myBoard = new Board(4, 8);
+        myTimer = new Timer(3000, null);
+        myPanel = new GamePanel();
+        myFrame.add(myPanel);
+    }
+    
+    /** Displays the GUI. */
+    public void start() {
+        myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        myFrame.setSize(600, 600);
+        myFrame.pack();
+        myFrame.setResizable(false);
+        myFrame.setVisible(true);
+    }
+}

@@ -1,0 +1,39 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package gui;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+
+import javax.swing.JPanel;
+
+
+/**
+ * Panel where the game is played.
+ * 
+ * @author Shannon Murphy
+ * @version 3 March 2015
+ */            
+@SuppressWarnings("serial")
+public class PreviewPanel extends JPanel {
+    
+    /**
+     * 
+     */
+    public PreviewPanel() {
+        super();
+        setPreferredSize(new Dimension(100, 200));
+        setBackground(Color.PINK);
+    }
+    
+    @Override
+    /** Draws Shapes on the panel. */
+    public void paintComponent(final Graphics theGraphics) {
+        super.paintComponent(theGraphics);
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+    }
+}

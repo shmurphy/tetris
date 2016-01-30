@@ -1,0 +1,177 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package gui;
+
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import model.Board;
+import model.TetrisPiece;
+
+/**
+ * Panel where the game is played.
+ * 
+ * @author Shannon Murphy
+ * @version 3 March 2015
+ */
+@SuppressWarnings("serial")
+public class GamePanel extends JPanel implements Observer {
+
+    /** The default width for the game board. */
+    private static final int BOARD_WIDTH = 10;
+    
+    /** The default height for the game board. */
+    private static final int BOARD_HEIGHT = 20;
+    
+    /** The delay for the Timer. */
+    private static final int TIMER_DELAY = 1000;
+    
+    /** The size for the blocks of the tetris pieces. */
+    private static final int BLOCK_SIZE = 10;
+    
+    /** The Board for the game. */
+    private final Board myBoard;
+    
+    /** The timer used for animation. */
+    private Timer myTimer;
+    
+    /** A list of the Board data. */
+    private List<Color[]> myBoardData;
+    
+    /** X-value for drawing the Tetris blocks. */
+    private int myX;
+    
+    /** The next piece that will appear on the board. */
+    private TetrisPiece myNextPiece;
+    
+    /** The Panel for the Next piece preview. */
+    private final PreviewPanel myPreviewPanel;
+    
+    /** To change the Panel when the game is over. */
+    private boolean myGameOver;
+    
+    /**
+     * 
+     */
+    public GamePanel() {
+        super();
+        setPreferredSize(new Dimension(300, 201));
+        setBackground(Color.WHITE);
+        createTimer();
+        myBoard = new Board(BOARD_WIDTH, BOARD_HEIGHT);
+        myPreviewPanel = new PreviewPanel();
+        setUpBoard();
+        myX = 0;
+        add(myPreviewPanel, BorderLayout.EAST);
+        myGameOver = false;
+    }
+    
+    /** Creates the Timer. */
+    private void createTimer() {
+        myTimer = new Timer(TIMER_DELAY, null);
+        myTimer.start();
+        myTimer.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent theEvent) {
+                myBoard.step();
+            }
+        });
+    }
+    
+    /** Sets up the Board for the game. */
+    private void setUpBoard() {
+        myBoard.addObserver(this);
+        myBoardData = new ArrayList<Color[]>();
+        myBoard.clear();
+    }
+    
+    /** Get the next piece for the next piece preview.
+     * @return . */
+    public TetrisPiece getNextPiece() {
+        return myNextPiece;
+    }
+    
+    @Override
+    /** Draws Shapes on the panel. */
+    public void paintComponent(final Graphics theGraphics) {
+        super.paintComponent(theGraphics);
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+        for (int i = myBoardData.size() - 1; i >= 0; i--) {
+            final Color[] row = myBoardData.get(i);
+            int index = 0;
+            for (final Color c : row) {
+                if (c != null) {
+                    myX = index;
+                    g2d.setColor(Color.BLACK);
+                    final Rectangle2D.Double rect = new Rectangle2D.Double(myX * BLOCK_SIZE, 
+                                                           (BLOCK_SIZE * 2 - i) * BLOCK_SIZE, 
+                                                           BLOCK_SIZE, BLOCK_SIZE);
+                    g2d.setStroke(new BasicStroke(2));
+                    g2d.draw(rect);
+                    g2d.setColor(c);
+                    g2d.fill(rect);
+                }
+                index++;
+            }
+        }
+        if (myGameOver) {
+            myTimer.stop();
+            g2d.setColor(Color.BLACK);
+            g2d.fill(new Rectangle2D.Double(0, 0, 100, 250));
+            g2d.setColor(Color.WHITE);                            
+            g2d.drawString("Game over!", 20, 30);
+        }
+    }
+    
+    /** 
+     * Moves the current piece based on the key event. 
+     * @param theEvent the KeyEvent typed by the user.
+     */
+    public void movePiece(final KeyEvent theEvent) {
+        if (theEvent.getKeyCode() == KeyEvent.VK_LEFT) {
+            myBoard.left();
+        } else if (theEvent.getKeyCode() == KeyEvent.VK_RIGHT) {
+            myBoard.right();
+        } else if (theEvent.getKeyCode() == KeyEvent.VK_DOWN) {
+            myBoard.down();
+        } else if (theEvent.getKeyCode() == KeyEvent.VK_SPACE) {
+            myBoard.drop();
+        } else if (theEvent.getKeyCode() == KeyEvent.VK_UP) {
+            myBoard.rotateCW();
+        } 
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void update(final Observable theObservable, final Object theArg) {
+        if (theObservable instanceof Board) {
+            if (theArg.getClass().equals(Board.BoardData.class)) {
+                myBoardData = ((Board.BoardData) theArg).getBoardData();
+                repaint();
+            } else if (theArg.getClass().equals(TetrisPiece.class)) {
+                myNextPiece = (TetrisPiece) theArg;
+                myPreviewPanel.setNextPiece(myNextPiece);
+                // set the preview panel to paint the next piece using its local points
+            } else if (theArg.getClass().equals(Board.GameStatus.class)) {
+                myGameOver = true;
+//                    myTimer.stop();
+            }
+        }
+    } 
+}

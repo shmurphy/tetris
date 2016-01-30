@@ -1,0 +1,67 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package gui;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import model.Point;
+import model.TetrisPiece;
+
+
+/**
+ * Panel where the next piece preview is displayed.
+ * 
+ * @author Shannon Murphy
+ * @version 3 March 2015
+ */            
+@SuppressWarnings("serial")
+public class PreviewPanel extends JPanel {
+    
+    /** Default size for blocks. */
+    private static final int BLOCK_SIZE = 20;
+    
+    /** Used for spacing in the next piece preview Panel. */
+    private static final int PREVIEW_PADDING = 4;
+    
+    /** The next piece's points. */
+    private Point[] myPoints;
+    
+    /**
+     * 
+     */
+    public PreviewPanel() {
+        super();
+        setPreferredSize(new Dimension(110, 100));
+        setBackground(Color.PINK);
+        add(new JLabel("Next Piece:"));
+        myPoints = new Point[4];
+    }
+    
+    /** TODO. 
+     * @param thePiece . 
+     */
+    public void setNextPiece(final TetrisPiece thePiece) {
+        myPoints = thePiece.getPoints();
+    }
+    
+    @Override
+    /** Draws Shapes on the panel. */
+    public void paintComponent(final Graphics theGraphics) {
+        super.paintComponent(theGraphics);
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+        for (int i = 0; i < myPoints.length; i++) {
+            g2d.draw(new Rectangle2D.Double((1 + myPoints[i].x()) * BLOCK_SIZE, 
+                                        (PREVIEW_PADDING - myPoints[i].y()) * BLOCK_SIZE, 
+                                        BLOCK_SIZE, BLOCK_SIZE));
+        }
+    }
+}
